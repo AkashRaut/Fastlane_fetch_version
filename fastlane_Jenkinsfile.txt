@@ -1,0 +1,41 @@
+pipeline{
+  agent any
+ environment {
+        PATH = "$HOME/.fastlane/bin:" +
+            //    "$HOME/.rvm/gems/ruby-2.5.3/bin:" +
+            //    "$HOME/.rvm/gems/ruby-2.5.3@global/bin:" +
+            //    "$HOME/.rvm/rubies/ruby-2.5.3/bin:" +
+                "/usr/local/bin:" +
+                "$PATH"
+	}
+
+    stages {
+        
+    stage('Git Clone'){
+        steps{
+           cleanWs()
+		//   echo "Cloning the ${ProjectName} project from GitLab"
+	       git url: 'https://github.com/AkashRaut/Sampleapp.git', branch: 'master', credentialsId: '123'
+		  // sh 'git clone https://git.llmhq.com/mobileapp/lakeshore-learn.git'
+		   echo "Code has been checked out into ${JENKINS_HOME}/workspace/${JOB_NAME} workspace..!"
+        }
+        
+     }
+     stage('Fastlane version fetch'){
+        steps{
+        
+        sh 'fastlane run latest_testflight_build_number >> version.txt'    
+
+        sh 'sed -n 9p version.txt >> a.txt'
+        sh '''a=$(awk '{print $6}' a.txt) && echo Build version is $a''' 
+    //    sh '''b=$(awk '{print $12}' a.txt) && echo $b'''
+        sh 'rm a.txt version.txt'   
+           
+            }
+        
+     }
+
+    }
+    
+    
+}

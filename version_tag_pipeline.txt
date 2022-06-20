@@ -1,0 +1,54 @@
+pipeline{
+  agent any
+ environment {
+        PATH = "$HOME/.fastlane/bin:" +
+                "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" 
+	}
+
+    stages {
+        
+    stage('Git Clone'){
+        steps{
+           cleanWs()
+	       git url: 'https://github.com/AkashRaut/Sampleapp.git', branch: 'master', credentialsId: '123'
+		   echo "Code has been checked out into ${JENKINS_HOME}/workspace/${JOB_NAME} workspace..!"
+        }
+        
+     }
+     stage('Fastlane version fetch'){
+        steps{
+withCredentials([
+    string(credentialsId: '1', variable: 'uname'),
+    string(credentialsId: '2', variable: 'pass'),
+    string(credentialsId: '3', variable: 'prod')
+    ]) {
+ 
+writeFile file:'Fastfile', text: """platform :ios do                       
+  before_all do
+    ENV["FASTLANE_DONT_STORE_PASSWORD"] = "1"
+    ENV["FASTLANE_USER"] = "$uname"
+    ENV["FASTLANE_PASSWORD"] = "$pass"
+  end
+
+  desc "GENERATE SCREENSHOT"
+  lane :Snap do
+    capture_screenshots
+  end
+end"""
+
+writeFile file:'Appfile', text: """app_identifier "$prod" # The bundle identifier of your app
+apple_id "$uname"  # Your Apple email address"""
+
+
+
+sh 'bash fetch_version.sh'   
+sh 'bash gittag.sh' 
+
+sh 'rm Fastfile Appfile'
+            }
+     }
+}
+    }
+    
+    
+}
